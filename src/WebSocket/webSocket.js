@@ -8,7 +8,6 @@ import {
 import { BehaviorSubject } from "rxjs";
 import { io } from "socket.io-client";
 var deviceIDSubscribed;
-import { WebSocketLink } from 'apollo-link-ws'
 // var socketData = {
 //   ecg: {
 //     1: [],
