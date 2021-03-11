@@ -1,17 +1,15 @@
 import React, {useEffect} from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Link } from "react-router-dom";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
-import { OpenSocket, SendRequest } from "./WebSocket/webSocket";
+import { SendRequest } from "./WebSocket/webSocket";
 const useStyles = makeStyles((theme) => ({
   
 }));
 
 export default function ECGViewer() {
   useEffect(() => {
-    OpenSocket();
-    // SendRequest("get_connected_pods");
+    SendRequest("get_connected_pods");
   });
 
   const options = {

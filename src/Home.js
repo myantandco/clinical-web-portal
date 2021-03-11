@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
@@ -6,7 +6,8 @@ import CardContent from '@material-ui/core/CardContent';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import { Link } from "react-router-dom";
-
+import { OpenSocket, SendRequest } from "./WebSocket/webSocket";
+import {AmplifySignOut } from '@aws-amplify/ui-react'
 const useStyles = makeStyles({
   mainContainer: {
     display: "flex",
@@ -32,6 +33,18 @@ const useStyles = makeStyles({
   pos: {
     marginBottom: 12,
   },
+  signoutBtn: {
+    // width: 400,
+    display: "flex",
+    verticalAlign: "center",
+    justifyContent: "space-between"
+  },
+  pageTitle: {
+    margin: 0, 
+    marginTop: 10, 
+    marginLeft: 10,
+    fontFamily: "sans-serif"
+  }
 });
 
 function createData(name, calories, fat, carbs, protein) {
@@ -47,10 +60,22 @@ const rows = [
 ];
 
 export default function Home() {
+  useEffect(()=>{
+    OpenSocket().then(()=>{
+      console.log("Then")
+      SendRequest("get_connected_pods");
+    })
+  }, [])
   const classes = useStyles();
   const bull = <span className={classes.bullet}>•</span>;
   return (
+    <>
+    <div className={classes.signoutBtn}>
+      <h2 className={classes.pageTitle}>SKIIN POD List</h2>
+      <AmplifySignOut></AmplifySignOut>
+    </div>
     <div className={classes.mainContainer}>
+      
       <Card className={classes.root}>
         <CardContent>
           <Typography className={classes.title} color="textSecondary" gutterBottom>
@@ -213,5 +238,6 @@ export default function Home() {
           <Button size="small">View ECG</Button>
         </CardActions>
     </Card>
-  </div>);
+  </div>
+  </>);
 }
