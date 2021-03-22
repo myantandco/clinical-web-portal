@@ -1,32 +1,17 @@
-// import {
-//   NOTIFICATION_REQUEST,
-//   ALL,
-//   NOTIFICATION_CANCELATION
-// } from "./webSocketHelper";
-// import { BehaviorSubject } from "rxjs";
-// import { io } from "socket.io-client";
-// var deviceIDSubscribed;
-// var socketData = {
-//   ecg: {
-//     1: [],
-//     2: [],
-//     3: [],
-//   },
-//   location: "",
-//   steps: "",
-//   activity: "",
-//   heartrate: "",
-// };
+import { BehaviorSubject } from "rxjs";
 import { Auth } from 'aws-amplify'
-
-var receiver = ["gateway123"];
-// var sender = "het.kansara@myant.ca";
-
 const webSocketLink = "wss://prod-websocket.skiinserver.com";
+const podList = new BehaviorSubject({})
+const ecgData = new BehaviorSubject({})
 let ws;
 
-// const devLink = "wss://lxwkunc4vj.execute-api.us-east-1.amazonaws.com/dev";
-// io.set('transports', ['xhr-polling'])
+export const getPodList = () => {
+  return podList
+}
+
+export const getECGData = () => {
+  return ecgData
+}
 
 export const OpenSocket = () => {
   return new Promise((resolve, reject)=> {
@@ -38,53 +23,33 @@ export const OpenSocket = () => {
       }
 
       ws.onmessage = (event) => {
-        console.log(event)
-        
-        // if (event) {
-        //   let data = parseMessage(event);
-        //   if (data && data.header.subType === "location") {
-        //     if (lastLocationTimestamp < data.phoneTimestamp) {
-        //       lastLocationTimestamp = data.phoneTimestamp;
-        //       socketData.location = data.data;
-        //       subscriber.next({ type: "location", socketData: socketData });
-        //     }
-        //   } else if (data && data.header.subType === "steps") {
-        //     if (lastStepsTimestamp < data.phoneTimestamp) {
-        //       lastStepsTimestamp = data.phoneTimestamp;
-        //       socketData.steps = data.data;
-        //       subscriber.next({ type: "steps", socketData: socketData });
-        //     }
-        //   } else if (data && data.header.subType === "activity") {
-        //     socketData.activity = data.data;
-        //     subscriber.next({ type: "activity", socketData: socketData });
-        //   } else if (
-        //     data &&
-        //     data.header.subType === "heartRate" &&
-        //     data.metaData.ECGChannel === 1
-        //   ) {
-        //     socketData.heartrate = data.data;
-        //     subscriber.next({ type: "heartRate", socketData: socketData });
-        //   }
-        // }
+        if (event) {
+          let data = parseMessage(event);
+          if(data && data.header && data.header.type == "ack" && data.data && data.data.type && data.data.type == "get_connected_pods" && data.data.data) {
+            podList.next(data.data.data)
+          }
+          if(data && data.header && data.header.type == "stream_ecg" && data.data) {
+            ecgData.next(data.data)
+          }
+        }
       };
 
       ws.onclose = () => {
         console.log("Connection has been terminated");
       };
       
-      // ws.onerror = (err) => {
-      //   console.log("The error is ", err);
-      // };
+      ws.onerror = (err) => {
+        console.log("The error is ", err);
+      };
     })
   })
 };
 
-// export const CloseSocket = () => {
-//   ws.close();
-// };
+export const CloseSocket = () => {
+  ws.close();
+};
 
-export const SendRequest = (type) => {
-
+export const getConnectedPods = () => {
   // type: type, 
   // protocol: '1.0.0', 
   // receiver: ["gateway123"],
@@ -92,28 +57,60 @@ export const SendRequest = (type) => {
   // message_id: 475002, 
   // request_ack: true,
   // timestamp: date,
-  const message = {
+  let requestMessage = {
     header: {
       'protocol': '1.0.0', 
       'receiver': ['gateway123'], 
-      'sender': 'het.kansara@myant.ca', 
+      'sender': 'mockserver', 
       'timestamp': Date.now(), 
       'message_id': 475002, 
-      'type': type, 
+      'type': "get_connected_pods", 
       'request_ack': true, 
       'length': 0,
       'data': {
       }
     }
   };
+  SendRequest(requestMessage)
+}
+
+export const ECGStream = (podid, serviceFlag) => {
+  // type: type, 
+  // protocol: '1.0.0', 
+  // receiver: ["gateway123"],
+  // sender: "het.kansara@myant.ca",
+  // message_id: 475002, 
+  // request_ack: true,
+  // timestamp: date,
+  let requestMessage = {
+    header: {
+      "protocol": "1.0.0", 
+      "receiver": ["gateway123"], 
+      "sender": "mockserver", 
+      'timestamp': Date.now(), 
+      "message_id": 475002, 
+      "type": "config_stream", 
+      "request_ack": true, 
+      "length": 1
+    },
+    data: {
+      "stream_id": ["ecg"], 
+      "pod_serial": [podid], 
+      "enable": serviceFlag
+    }
+  };
+  SendRequest(requestMessage)
+}
+
+export const SendRequest = (requestMessage) => {
   try {
     ws.send(
       JSON.stringify({
         action: "sendmessage",
-        data: JSON.stringify(message),
+        data: JSON.stringify(requestMessage),
       })
     );
-    console.log("Message Sent to", receiver[0], message);
+    console.log("Message Sent ", requestMessage);
   } catch (er) {
     console.log("Could not send the request, because ", er);
   }
@@ -127,34 +124,24 @@ const parseMessage = (event) => {
   return {};
 };
 
-// export const stopMessage = (type) => {
-//   let deviceIDRequestForCancellation = deviceIDSubscribed;
-//   const message = {
-//     receiver,
-//     date,
-//     header: {
-//       type: type,
-//       subType: ALL,
-//     },
-//     // metaData: {
-//     //   deviceIDRequestForCancellation,
-//     // },
-//   };
-//   try {
-//     ws.close();
-//     // ws.send(
-//     //   JSON.stringify({
-//     //     action: "sendmessage",
-//     //     data: JSON.stringify(message),
-//     //   })
-//     // );
-//     console.log(
-//       "Cancellation Request for",
-//       // deviceIDRequestForCancellation,
-//       // "Sent to",
-//       receiver[0]
-//     );
-//   } catch (er) {
-//     console.log("Could not send the request, because ", er);
-//   }
-// };
+export const getChartObject = (channelData) => {
+  let returnObj = {}
+  let lastTimeStamp = 0;
+  do {
+    let data = channelData.splice(0, 6);
+    let chunkData = channelData.splice(0, data[data.length-1]);
+    // chunkData = chunkData.filter((value, index) => {
+    //   return index % 2 != 0;
+    // });
+    if(lastTimeStamp!=0 && (data[2] - lastTimeStamp) > 72) {
+      let missingSamples = parseInt((data[2] - lastTimeStamp) % 72)
+      let value = data[2]
+      for(let i=0; i<missingSamples; i++) {
+        returnObj[value+72] = [0,0,0,0,0,0,0,0,0,0,0,0]
+      }
+      returnObj[data[2]] = chunkData
+    }
+    returnObj[data[2]] = chunkData
+  } while(channelData.length!=0)
+  return returnObj
+}

@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
@@ -6,7 +6,7 @@ import CardContent from '@material-ui/core/CardContent';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import { Link } from "react-router-dom";
-import { OpenSocket, SendRequest } from "./WebSocket/webSocket";
+import { OpenSocket, SendRequest, getConnectedPods, ECGStream, getPodList } from "./WebSocket/webSocket";
 import {AmplifySignOut } from '@aws-amplify/ui-react'
 const useStyles = makeStyles({
   mainContainer: {
@@ -59,12 +59,31 @@ const rows = [
   createData('Gingerbread', 356, 16.0, 49, 3.9),
 ];
 
-export default function Home() {
+export default function Home({ route, navigation }) {
+  const posListSubscription = useRef(null)
+  const [podList, setPodList] = useState([]);
   useEffect(()=>{
     OpenSocket().then(()=>{
-      console.log("Then")
-      SendRequest("get_connected_pods");
+      getConnectedPods();
     })
+    if (posListSubscription.current === null) {
+      posListSubscription.current = getPodList().subscribe((data)=>{
+        let tempArr = [];
+        for(let key of Object.keys(data)) {
+          let referenceObj = data[key];
+          referenceObj["pod_id"] = key;
+          tempArr.push(referenceObj)
+        }
+        setPodList(tempArr);
+        console.log("Pod data", tempArr);
+      })
+    }
+    return () => {
+      if(posListSubscription.current != null) {
+        posListSubscription.current?.unsubscribe();
+        posListSubscription.current = null;
+      }
+    }
   }, [])
   const classes = useStyles();
   const bull = <span className={classes.bullet}>•</span>;
@@ -75,169 +94,37 @@ export default function Home() {
       <AmplifySignOut></AmplifySignOut>
     </div>
     <div className={classes.mainContainer}>
-      
-      <Card className={classes.root}>
-        <CardContent>
-          <Typography className={classes.title} color="textSecondary" gutterBottom>
-            Pod Details
-          </Typography>
-          <Typography variant="h5" component="h2">
-           4022250974
-          </Typography>
-          <Typography className={classes.pos} color="textSecondary">
-           M/A: 267708584286381
-          </Typography>
-          <Typography variant="body2" component="p">
-            Firmware: 4.3.6
-            <br />
-            Garment ID: 255
-            <br/>
-            Battery Level: 1
-            <br />
-            Charging
-            <br />
-            Lead ON
-          </Typography>
-        </CardContent>
-        <CardActions>
-          <Link to="/ECGViewer"><Button size="small">View ECG</Button></Link>
-        </CardActions>
-    </Card>
-    <Card className={classes.root}>
-        <CardContent>
-          <Typography className={classes.title} color="textSecondary" gutterBottom>
-            Pod Details
-          </Typography>
-          <Typography variant="h5" component="h2">
-           4022250974
-          </Typography>
-          <Typography className={classes.pos} color="textSecondary">
-           M/A: 267708584286381
-          </Typography>
-          <Typography variant="body2" component="p">
-            Firmware: 4.3.6
-            <br />
-            Garment ID: 255
-            <br/>
-            Battery Level: 1
-            <br />
-            Charging
-            <br />
-            Lead ON
-          </Typography>
-        </CardContent>
-        <CardActions>
-          <Button size="small">View ECG</Button>
-        </CardActions>
-    </Card>
-    <Card className={classes.root}>
-        <CardContent>
-          <Typography className={classes.title} color="textSecondary" gutterBottom>
-            Pod Details
-          </Typography>
-          <Typography variant="h5" component="h2">
-           4022250974
-          </Typography>
-          <Typography className={classes.pos} color="textSecondary">
-           M/A: 267708584286381
-          </Typography>
-          <Typography variant="body2" component="p">
-            Firmware: 4.3.6
-            <br />
-            Garment ID: 255
-            <br/>
-            Battery Level: 1
-            <br />
-            Charging
-            <br />
-            Lead ON
-          </Typography>
-        </CardContent>
-        <CardActions>
-          <Button size="small">View ECG</Button>
-        </CardActions>
-    </Card>
-    <Card className={classes.root}>
-        <CardContent>
-          <Typography className={classes.title} color="textSecondary" gutterBottom>
-            Pod Details
-          </Typography>
-          <Typography variant="h5" component="h2">
-           4022250974
-          </Typography>
-          <Typography className={classes.pos} color="textSecondary">
-           M/A: 267708584286381
-          </Typography>
-          <Typography variant="body2" component="p">
-            Firmware: 4.3.6
-            <br />
-            Garment ID: 255
-            <br/>
-            Battery Level: 1
-            <br />
-            Charging
-            <br />
-            Lead ON
-          </Typography>
-        </CardContent>
-        <CardActions>
-          <Button size="small">View ECG</Button>
-        </CardActions>
-    </Card>
-    <Card className={classes.root}>
-        <CardContent>
-          <Typography className={classes.title} color="textSecondary" gutterBottom>
-            Pod Details
-          </Typography>
-          <Typography variant="h5" component="h2">
-           4022250974
-          </Typography>
-          <Typography className={classes.pos} color="textSecondary">
-           M/A: 267708584286381
-          </Typography>
-          <Typography variant="body2" component="p">
-            Firmware: 4.3.6
-            <br />
-            Garment ID: 255
-            <br/>
-            Battery Level: 1
-            <br />
-            Charging
-            <br />
-            Lead ON
-          </Typography>
-        </CardContent>
-        <CardActions>
-          <Button size="small">View ECG</Button>
-        </CardActions>
-    </Card>
-    <Card className={classes.root}>
-        <CardContent>
-          <Typography className={classes.title} color="textSecondary" gutterBottom>
-            Pod Details
-          </Typography>
-          <Typography variant="h5" component="h2">
-           4022250974
-          </Typography>
-          <Typography className={classes.pos} color="textSecondary">
-           M/A: 267708584286381
-          </Typography>
-          <Typography variant="body2" component="p">
-            Firmware: 4.3.6
-            <br />
-            Garment ID: 255
-            <br/>
-            Battery Level: 1
-            <br />
-            Charging
-            <br />
-            Lead ON
-          </Typography>
-        </CardContent>
-        <CardActions>
-          <Button size="small">View ECG</Button>
-        </CardActions>
-    </Card>
+      {
+        podList.map((podDetails)=>{
+          return (<Card className={classes.root} key={podDetails.pod_id}>
+            <CardContent>
+              <Typography className={classes.title} color="textSecondary" gutterBottom>
+                Pod Details
+              </Typography>
+              <Typography variant="h5" component="h2">
+               {podDetails.pod_id}
+              </Typography>
+              <Typography className={classes.pos} color="textSecondary">
+               M/A: {podDetails.macaddress}
+              </Typography>
+              <Typography variant="body2" component="p">
+                Firmware: {podDetails.fw_version}
+                <br />
+                Garment ID: {podDetails.garment_id}
+                <br/>
+                Battery Level: {podDetails.batt_level}
+                <br />
+                {podDetails.charging ? "Charging" : "Not-Charging" }
+                <br />
+                Lead ON
+              </Typography>
+            </CardContent>
+            <CardActions>
+              <Link to={`/CanvasECG/${podDetails.pod_id}`} params={{ testvalue: "hello" }}><Button size="small">View ECG</Button></Link>
+            </CardActions>
+        </Card>)
+        })
+      }
   </div>
   </>);
 }

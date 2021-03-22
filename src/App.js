@@ -3,6 +3,9 @@ import './App.css';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import Home from "./Home";
 import ECGViewer from "./ECGViewer";
+import SciChart from "./SciChart";
+import CanvasECG from "./CanvasECG/CanvasECG";
+// import ECGPlot from "./ECGPlot";
 import Amplify from 'aws-amplify'
 import { withAuthenticator } from '@aws-amplify/ui-react'
 
@@ -24,17 +27,20 @@ Amplify.configure({
 function App() {
   return (
     <>
+    
     <Router>
       <Switch>
         {/* <Route path="/home">
           <Home></Home>
         </Route> */}
-        <Route path="/ECGViewer">
-          <ECGViewer></ECGViewer>
-        </Route>
+        <Route path="/ECGViewer/:podid" render={props => <ECGViewer {...props}/>}/>
+        <Route path="/SciChart/:podid" render={props => <SciChart {...props}/>}/>
+        <Route path="/CanvasECG/:podid" render={props => <CanvasECG {...props}/>}/>
+        {/* <Route path="/ECGPlot/:podid" render={props => <ECGPlot {...props}/>}/> */}
         <Route path="/">
           {/* <SignIn></SignIn> */}
           <Home></Home>
+          {/* <CanvasECG></CanvasECG> */}
         </Route>
       </Switch>
     </Router>
